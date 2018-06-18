@@ -1,0 +1,23 @@
+mart_031C_400.log @ arthur-laptop
+2018-04-22T07:43:06
+
+c0 = 1.430e-02 (0.31 wt.%%)
+T_C = 400.0 [oC]
+total_time = 1.0 [s]; n_time = 200000
+
+aust: structure = fcc; E = 0.0 [J/mol]; type_D = 0 (comp.local)
+      thermodynamical data: A = 35129.000; B = -7.639; C = 169105.000; D = -120.400
+      z0 = 0.00 [um]; zn = 0.03 [um]; n = 20
+mart: structure = bcc; E = 0.0 [J/mol]
+      thermodynamical data: A = 111918.000; B = -51.440
+      z0 = -0.09 [um]; zn = 0.00 [um]; n = 20
+int1: type_int = 0 (fixed.balance)
+
+     2: t=1.00e-05, r_bcc=1.24e-01 r_fcc=8.36e-03, ci_bcc*=0.004177, ci_fcc*=5.576730, cavg*=0.995885, J=8.3105, t_elapsed=0.01
+     6: t=3.00e-05, r_bcc=1.24e-01 r_fcc=4.43e-02, ci_bcc*=0.010644, ci_fcc*=8.083825, cavg*=0.997561, J=0.228875, t_elapsed=0.03
+    20: t=1.00e-04, r_bcc=1.24e-01 r_fcc=8.39e-02, ci_bcc*=0.014631, ci_fcc*=9.013794, cavg*=1.000180, J=0.676032, t_elapsed=0.05
+    60: t=3.00e-04, r_bcc=1.24e-01 r_fcc=8.76e-02, ci_bcc*=0.014947, ci_fcc*=9.077435, cavg*=0.999911, J=3.45721, t_elapsed=0.12
+   200: t=1.00e-03, r_bcc=1.24e-01 r_fcc=9.63e-02, ci_bcc*=0.015640, ci_fcc*=9.213028, cavg*=1.000013, J=0.330034, t_elapsed=0.31
+   600: t=3.00e-03, r_bcc=1.24e-01 r_fcc=9.44e-02, ci_bcc*=0.015493, ci_fcc*=9.184663, cavg*=1.000002, J=0.10466, t_elapsed=0.86
+  2000: t=1.00e-02, r_bcc=1.24e-01 r_fcc=6.55e-02, ci_bcc*=0.012968, ci_fcc*=8.656962, cavg*=1.000003, J=0.0259458, t_elapsed=2.81
+  6000: t=3.00e-02, r_bcc=1.24e-01 r_fcc=1.90e-02, ci_bcc*=0.006771, ci_fcc*=6.825777, cavg*=1.000002, J=0.141102, t_elapsed=8.43

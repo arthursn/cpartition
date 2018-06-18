@@ -1,0 +1,22 @@
+mart_025C_350.log @ arthur-laptop
+2018-04-22T06:02:10
+
+c0 = 1.156e-02 (0.25 wt.%%)
+T_C = 350.0 [oC]
+total_time = 1.0 [s]; n_time = 20000
+
+mart: structure = bcc; E = 0.0 [J/mol]
+      thermodynamical data: ../thermo/Fe-C/350-BCC.TXT
+      z0 = -0.10 [um]; zn = 0.00 [um]; n = 25
+aust: structure = fcc; E = 0.0 [J/mol]; type_D = 0 (comp.local)
+      thermodynamical data: ../thermo/Fe-C/350-FCC.TXT
+      z0 = 0.00 [um]; zn = 0.03 [um]; n = 250
+int1: type_int = 1 (fixed.fluxes)
+
+     2: t=1.00e-04, r_bcc=5.22e-01 r_fcc=2.04e+00, ci_bcc*=0.004628, ci_fcc*=7.282189, cavg*=0.969498, J=4.11193, t_elapsed=0.01
+     6: t=3.00e-04, r_bcc=5.22e-01 r_fcc=1.01e+01, ci_bcc*=0.011620, ci_fcc*=10.017208, cavg*=0.961951, J=0.701629, t_elapsed=0.02
+    20: t=1.00e-03, r_bcc=5.22e-01 r_fcc=1.55e+01, ci_bcc*=0.014634, ci_fcc*=10.723373, cavg*=0.959964, J=0.163533, t_elapsed=0.05
+    60: t=3.00e-03, r_bcc=5.22e-01 r_fcc=1.87e+01, ci_bcc*=0.016169, ci_fcc*=11.029918, cavg*=0.955792, J=0.0576415, t_elapsed=0.12
+   200: t=1.00e-02, r_bcc=5.22e-01 r_fcc=2.08e+01, ci_bcc*=0.017145, ci_fcc*=11.210432, cavg*=0.951919, J=0.0144096, t_elapsed=0.37
+   600: t=3.00e-02, r_bcc=5.22e-01 r_fcc=1.81e+01, ci_bcc*=0.015886, ci_fcc*=10.975553, cavg*=0.959011, J=0.0832127, t_elapsed=1.07
+  2000: t=1.00e-01, r_bcc=5.22e-01 r_fcc=5.33e+00, ci_bcc*=0.008124, ci_fcc*=8.933846, cavg*=0.989237, J=0.310194, t_elapsed=3.52
