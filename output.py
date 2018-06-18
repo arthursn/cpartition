@@ -178,8 +178,8 @@ class SimulationLog(object):
         try:
             fileout = open(fname, 'w')
             fileout.write(header)
-            df.to_csv(fileout, index=False, sep=' ', float_format='%.6e')
             fileout.close()
+            df.to_csv(fname, index=False, sep=' ', float_format='%.6e', mode='a')
         except:
             raise
         else:
