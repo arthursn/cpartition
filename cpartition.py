@@ -4,6 +4,7 @@ import sys, os
 from itertools import cycle
 
 import numpy as np 
+import pandas as pd
 
 from scipy.sparse import spdiags, csc_matrix
 from scipy.sparse.linalg import dsolve
@@ -59,34 +60,91 @@ class Domain(object):
         self.z = z
         self.c = c
 
-        self.n_time = kwargs.get('n_time', None)
+        self.t0 = kwargs.pop('t0', 0)  # initial time used for reference
 
         if self.z is None:
-            self.z0, self.zn = kwargs.get('z0', 0.), kwargs.get('zn', 1.)  # positions at th 0-th and n-th nodes
+            self.z0, self.zn = kwargs.pop('z0', 0.), kwargs.pop('zn', 1.)  # positions at th 0-th and n-th nodes
             try:
                 self.n = len(self.c)
             except:
-                self.n = kwargs.get('n', 100)   # number of nodes in the grid
+                self.n = kwargs.pop('n', 100)   # number of nodes in the grid
             self.z = np.linspace(self.z0, self.zn, self.n)  # position of each node
         
         if self.c is None:
-            self.c0 = kwargs.get('c0', 0)   # value at t=0
+            self.c0 = kwargs.pop('c0', 0)   # value at t=0
             try:
                 self.n = len(self.z)
             except:
-                self.n = kwargs.get('n', 100)   # number of nodes in the grid
+                self.n = kwargs.pop('n', 100)   # number of nodes in the grid
             self.c = np.full(self.n, self.c0) # composition in the instant t
-            
+        
+        self.it = []  # iteration number
+        self._t = []
+        self._ci0 = []
+        self._cin = []
+        self._cavg = []
+        self._s0 = []
+        self._sn = []
+
         self.initialize_grid()
 
         self.active = True
 
     @property
     def T(self):
-        """
-        Absolute temperature in K
-        """
+        """Absolute temperature in K"""
         return self.T_C + K
+
+    @property
+    def t(self):
+        """Time"""
+        return np.array(self._t)
+
+    @property
+    def cavg(self):
+        """Average composition"""
+        return np.array(self._cavg)
+
+    @property
+    def ci0(self):
+        """Interfacial composition (node 0)"""
+        return np.array(self._ci0)
+    
+    @property
+    def cin(self):
+        """Interfacial composition (node n)"""
+        return np.array(self._cin)
+
+    @property
+    def s0(self):
+        """Interface position (node 0)"""
+        return np.array(self._s0)
+
+    @property
+    def sn(self):
+        """Interface position (node n)"""
+        return np.array(self._sn)
+
+    def dataframe(self, cols=[], prefix=None, sep='.'):
+        """Summarize domain properties in a pandas dataframe"""
+        datadict = dict(t=self.t, cavg=self.cavg,
+                        ci0=self.ci0, cin=self.cin,
+                        s0=self.s0, sn=self.sn)
+        columns = ['t', 'cavg', 'ci0', 'cin', 's0', 'sn']
+        df = pd.DataFrame(datadict, columns=columns)
+
+        # select columns
+        if len(cols) > 0:
+            df = df[cols]
+
+        # rename columns adding a prefix ahead of the property name
+        prefix = [prefix] if prefix else []
+        # df.rename(columns=lambda s: sep.join(prefix + [s]) if s != 't' else s, inplace=True)
+        df.rename(columns=lambda s: sep.join(prefix + [s]), inplace=True)
+        # rename index to correspond iteration numbers
+        df.index = self.it
+        
+        return df
 
     def initialize_grid(self, reset=True):
         """
@@ -118,22 +176,6 @@ class Domain(object):
         
         self.r = np.zeros(self.c.shape)
         self.g = np.zeros(self.c.shape)
-        
-        if reset is True:
-            if self.n_time is None:
-                self.ci0 = np.array([])
-                self.cin = np.array([])
-                self.cavg = np.array([])
-                self.s0 = np.array([])
-                self.sn = np.array([])
-            else:
-                self.ci0 = np.zeros(self.n_time)
-                self.cin = np.zeros(self.n_time)
-                self.cavg = np.zeros(self.n_time)
-                self.s0 = np.zeros(self.n_time)
-                self.sn = np.zeros(self.n_time)
-                self.it = 0
-            self.ds = 0.
 
     def activate(self):
         self.active = True
@@ -234,7 +276,7 @@ class Domain(object):
         self._c1[-1] = (bcn[3] - (bcn[1]*self._c1[-2] + bcn[2]*self._c1[-3]))/bcn[0]
         self.c[:] = self._c1
 
-    def update_grid(self, v0=0., vn=0.):
+    def update_grid(self, it, v0=0., vn=0.):
         """
         Update the interface position and interpolate the composition
 
@@ -261,19 +303,17 @@ class Domain(object):
             self.L = np.abs(self.z[-1] - self.z[0])
             self.dz = dz1
 
-        if self.n_time is None:
-            self.ci0 = np.append(self.ci0, self.c[0])
-            self.cin = np.append(self.cin, self.c[-1])
-            self.cavg = np.append(self.cavg, self.get_cavg())
-            self.s0 = np.append(self.s0, self.z[0])
-            self.sn = np.append(self.sn, self.z[-1])
-        else:
-            self.ci0[self.it] = self.c[0]
-            self.cin[self.it] = self.c[-1]
-            self.cavg[self.it] = self.get_cavg()
-            self.s0[self.it] = self.z[0]
-            self.sn[self.it] = self.z[-1]
-            self.it += 1
+        # Update arrays with aditional properties of the grid, i.e.,
+        # time, avg. composition, interfacial compositions, and
+        # interface positions
+        tref = self._t[-1] if len(self._t) > 0 else self.t0
+        self._t.append(tref + self.dt)
+        self._cavg.append(self.get_cavg())
+        self._ci0.append(self.c[0])
+        self._cin.append(self.c[-1])
+        self._s0.append(self.z[0])
+        self._sn.append(self.z[-1])
+        self.it.append(it)
 
     def get_cavg(self):
         """
@@ -383,8 +423,8 @@ class BCC(Domain):
         # Instantiate super class Domain
         super(BCC, self).__init__(T_C, dt, z, c, **kwargs)
 
-        self.Vm = kwargs.get('Vm', 7.0923e-6)    # Molar volume of iron (m^3/mol)
-        self.E = kwargs.get('E', 0.)   # Extra energy (e.g., to fit WBs theory)
+        self.Vm = kwargs.pop('Vm', 7.0923e-6)    # Molar volume of iron (m^3/mol)
+        self.E = kwargs.pop('E', 0.)   # Extra energy (e.g., to fit WBs theory)
 
         self.type_D = type_D
         try:
@@ -392,8 +432,8 @@ class BCC(Domain):
         except:
             raise Exception('Invalid option')
 
-        self.c_carbide = kwargs.get('c_carbide', 0.25)
-        self.cmax_bcc = kwargs.get('cmax_bcc', 0)
+        self.c_carbide = kwargs.pop('c_carbide', 0.25)
+        self.cmax_bcc = kwargs.pop('cmax_bcc', 0)
 
         self.tdata = tdata
         self.tpar = tpar  # thermodynamical parameters obtained after fitting of chemical potential curves
@@ -532,8 +572,8 @@ class FCC(Domain):
         # Instantiate super class Domain
         super(FCC, self).__init__(T_C, dt, z, c, **kwargs)
 
-        self.Vm = kwargs.get('Vm', 7.0923e-6)  # Molar volume of iron (m^3/mol)
-        self.E = kwargs.get('E', 0.)  # Extra energy (e.g., WBs theory)
+        self.Vm = kwargs.pop('Vm', 7.0923e-6)  # Molar volume of iron (m^3/mol)
+        self.E = kwargs.pop('E', 0.)  # Extra energy (e.g., WBs theory)
 
         self.type_D = type_D
         try:
@@ -700,8 +740,8 @@ class Interface(object):
         except:
             raise Exception('Invalid option')
 
-        self.M0 = kwargs.get('M0', 2.e-4)
-        self.Qa = kwargs.get('Qa', 140e3)
+        self.M0 = kwargs.pop('M0', 2.e-4)
+        self.Qa = kwargs.pop('Qa', 140e3)
 
         self.initialize()
 
@@ -816,7 +856,7 @@ class Interface(object):
         """
         self.update_y()
         if self.v == 0.:
-            if kwargs.get('poly_deg', 2) == 2:
+            if kwargs.pop('poly_deg', 2) == 2:
                 f = lambda x: (self.CCE(x) - self.y_bcc[1])/self.k(x) + (x - self.y_fcc[1])
             else:
                 f = lambda x: (1.5*self.CCE(x) - 2.*self.y_bcc[1] + \
@@ -824,7 +864,7 @@ class Interface(object):
                         (1.5*x - 2.*self.y_fcc[1] + .5*self.y_fcc[2])
         else:
             # BE EXTRA CAREFUL
-            if kwargs.get('poly_deg', 2) == 2:
+            if kwargs.pop('poly_deg', 2) == 2:
                 f = lambda x: (self.CCE(x) - self.y_bcc[1]) + \
                         (x - self.y_fcc[1])*self.k(x) - \
                         (-1.)**self.p_bcc*self.v*(x - self.CCE(x))*self.bcc.dz/self.bcc.D(C=self.CCE(x))
@@ -833,7 +873,7 @@ class Interface(object):
                         (1.5*x - 2.*self.y_fcc[1] + .5*self.y_fcc[2])*self.k(x) - \
                         (-1.)**self.p_bcc*self.v*(x - self.CCE(x))*self.bcc.dz/self.bcc.D(C=self.CCE(x))
             
-        guess = kwargs.get('guess', self.y_fcc[0])
+        guess = kwargs.pop('guess', self.y_fcc[0])
         try:
             self.ci_fcc = newton(func=f, x0=guess)
         except:
@@ -862,7 +902,7 @@ class Interface(object):
         sum_bcc = np.sum(self.bcc.c[1:-1]) + .5*self._y_bcc
         sum_fcc = np.sum(self.fcc.c[1:-1]) + .5*self._y_fcc
         f = lambda x: (.5*self.CCE(x) + sum_bcc)*self.bcc.dz + (.5*x + sum_fcc)*self.fcc.dz - c0*(self.bcc.L + self.fcc.L)
-        guess = kwargs.get('guess', self.y_fcc[0])
+        guess = kwargs.pop('guess', self.y_fcc[0])
         self.ci_fcc = newton(func=f, x0=guess)
         self.ci_bcc = self.CCE(self.ci_fcc)
         return self.ci_bcc, self.ci_fcc
@@ -882,8 +922,8 @@ class Interface(object):
         F : float
             Chemical driving force in J/mol
         """
-        ci_bcc = kwargs.get('ci_bcc', self.ci_bcc)
-        ci_fcc = kwargs.get('ci_fcc', self.ci_fcc)
+        ci_bcc = kwargs.pop('ci_bcc', self.ci_bcc)
+        ci_fcc = kwargs.pop('ci_fcc', self.ci_fcc)
         F = (1. - ci_bcc)*(self.fcc.x2mu['Z'](ci_fcc) - self.bcc.x2mu['Z'](ci_bcc))
         return (-1.)**self.p_bcc*F
 
