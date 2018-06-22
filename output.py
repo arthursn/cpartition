@@ -503,8 +503,11 @@ class CProfiles(object):
 
         for xkey, ykey in pairs:
             try:
-                ax.plot(self.df_si[xkey], func(self.df_ci[ykey]),
-                        *args, **kwargs)
+                ax.plot(self.df_si[xkey],
+                        func(self.df_ci[ykey]), *args, **kwargs)
+                if mirror:
+                    ax.plot(2*self.zz[0][-1] - self.df_si[xkey],
+                            func(self.df_ci[ykey]), *args, **kwargs)
             except KeyError:
                 print('Key error')
             except Exception as ex:
