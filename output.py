@@ -420,7 +420,7 @@ class CProfiles(object):
         # loading time if not defined yet
         if len(self.t) == 0:
             self.load_time()
-            
+
         for t in tlist:
             matches, = np.where(self.t == t)
             appendto += list(matches)
@@ -503,12 +503,13 @@ class CProfiles(object):
 
         for xkey, ykey in pairs:
             try:
-                ax.plot(self.df_si[xkey], func(
-                    self.df_ci[ykey]), *args, **kwargs)
+                ax.plot(self.df_si[xkey], func(self.df_ci[ykey]),
+                        *args, **kwargs)
             except KeyError:
                 print('Key error')
-            except:
-                print('Unexpected error')
+            except Exception as ex:
+                print('Unexpected error: {}'.format(ex))
+                raise
 
         return ax
 
