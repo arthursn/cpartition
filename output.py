@@ -426,6 +426,58 @@ class CProfiles(object):
             appendto += list(matches)
         return appendto
 
+    def label_phases(self, ax, t, labels=[('aus1', r'$\gamma_1$', -1),
+                                          ('aus2', r'$\gamma_2$', -1),
+                                          ('aust', r'$\gamma$', -1),
+                                          ('mart', r"$\alpha'$", -1),
+                                          ('fer1', r'$\alpha_{b1}$', 1),
+                                          ('fer2', r'$\alpha_{b2}$', 1)],
+                     mirror=False, **kwargs):
+        if isinstance(t, list):
+            t = t[-1]
+        j, = self.where_tlist([t], [])
+
+        zbleft = self.zz[0][0]
+        zbright = self.zz[0][-1]
+        kwannotate = dict(size=9)
+        kwannotate.update(kwargs)
+        kwvline = dict(color='k', ls=':', lw='.8')
+        zused = []
+
+        for strct, lab, ypos in labels:
+            sel = self.ss[j] == strct
+            z = self.zz[j][sel]
+
+            if len(z > 0):
+                ymin, ymax = ax.get_ylim()
+                va = 'bottom' if ypos > 0 else 'top'
+
+                zclist = [.5*(z[0] + z[-1])]
+                if mirror:
+                    zclist += [2*zbright - zclist[0]]
+                    if z[-1] == zbright:
+                        zclist = [self.zz[0][-1]]
+
+                for zc in zclist:
+                    ax.annotate(s=lab, xy=(zc, ymax), xytext=(0, ypos),
+                                textcoords='offset points',
+                                ha='center', va=va, **kwannotate)
+                ##############
+
+                if z[0] != zbleft and z[0] not in zused:
+                    ax.axvline(z[0], **kwvline)
+                    if mirror:
+                        ax.axvline(2*zbright - z[0], **kwvline)
+                    zused.append(z[0])
+
+                if z[-1] != zbright and z[-1] not in zused:
+                    ax.axvline(z[-1], **kwvline)
+                    if mirror:
+                        ax.axvline(2*zbright - z[-1], **kwvline)
+                    zused.append(z[-1])
+
+        return ax
+
     def plot_cprofiles(self, ax=None, mirror=False, func=lambda x: x, **kwargs):
         """
         Plot carbon profiles using matplotlib plot
@@ -452,8 +504,7 @@ class CProfiles(object):
         if len(self.t) == 0:
             self.load_time()
 
-        # append to sel the indices where t in tlist is also
-        # in self.t
+        # append to sel the indices where t in tlist is also in self.t
         if len(tlist) > 0:  # if tlist is empty
             sel = self.where_tlist(tlist, appendto=sel)
 
