@@ -542,28 +542,29 @@ class CProfiles(object):
         else:
             fig = ax.get_figure()
 
-        if len(self.df_ci) == 0:
-            fname = os.path.join(
-                'C_extremities', '{}.txt'.format(self.basename))
-            self.df_ci = pd.read_table(fname, sep=' ', comment='#')
+        if len(pairs) > 0:
+            if len(self.df_ci) == 0:
+                fname = os.path.join(
+                    'C_extremities', '{}.txt'.format(self.basename))
+                self.df_ci = pd.read_table(fname, sep=' ', comment='#')
 
-        if len(self.df_si) == 0:
-            fname = os.path.join(
-                'pos_extremities', '{}.txt'.format(self.basename))
-            self.df_si = pd.read_table(fname, sep=' ', comment='#')
+            if len(self.df_si) == 0:
+                fname = os.path.join(
+                    'pos_extremities', '{}.txt'.format(self.basename))
+                self.df_si = pd.read_table(fname, sep=' ', comment='#')
 
-        for xkey, ykey in pairs:
-            try:
-                ax.plot(self.df_si[xkey],
-                        func(self.df_ci[ykey]), *args, **kwargs)
-                if mirror:
-                    ax.plot(2*self.zz[0][-1] - self.df_si[xkey],
+            for xkey, ykey in pairs:
+                try:
+                    ax.plot(self.df_si[xkey],
                             func(self.df_ci[ykey]), *args, **kwargs)
-            except KeyError:
-                print('Key error')
-            except Exception as ex:
-                print('Unexpected error: {}'.format(ex))
-                raise
+                    if mirror:
+                        ax.plot(2*self.zz[0][-1] - self.df_si[xkey],
+                                func(self.df_ci[ykey]), *args, **kwargs)
+                except KeyError:
+                    print('Key error')
+                except Exception as ex:
+                    print('Unexpected error: {}'.format(ex))
+                    raise
 
         return ax
 
