@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+import numpy as np
+import time
+
+import sys
+import os
+from cpartition import *
+
+"""Growth of bainitic ferrite"""
+
+basename = os.path.basename(__file__).replace('.py', '')
+wc0 = 0.25e-2  # initial wt. fraction of carbon
+c0 = w2x(wc0)  # initial at. fraction of carbon
+T_C = 350.  # temperature
+
+# Iteration steps
+control_itsteps = ControlIterationSteps([5e-6, 5e-4, 5e-3, 5e-2],
+                                        [0, .2, 2, 20, 1e3])
+total_time = control_itsteps.total_time
+n_time = control_itsteps.ntime
+dt = control_itsteps.dt
+each = 200  # export carbon profiles every <each> iteration
+control_itsteps.print_summary()
+
+# austenite grid
+aust = FCC(T_C=T_C, dt=dt,
+           z=np.linspace(0, .03, 40), c0=c0,
+           tdata='../thermo/Fe-C/350-FCC.TXT')
+# ferrite grid
+ferr = BCC(T_C=T_C, dt=dt,
+           z=np.linspace(.03, .03, 10), c0=0,
+           tdata='../thermo/Fe-C/350-BCC.TXT', E=WBs(T_C))
+# austenite/ferrite interface
+intf = Interface(domain1=aust, domain2=ferr, type_int='mobile.mmode')
+
+ferr.c = 
+
+# Initialize log
+log = SimulationLog(basename)
+log.set_domains([('ferr', ferr), ('aust', aust)])
+log.set_interfaces([('intf', intf)])
+log.set_conditions(c0, T_C, total_time, n_time)
+log.initialize(False)
+
+for it in control_itsteps.itlist:
+    if it in control_itsteps.itstepi and it > 0:
+        control_itsteps.next_itstep()
+        dt = control_itsteps.dt
+
+        ferr.dt = dt
+        aust.dt = dt
+
+    # Calculate interface velocity
+    intf.v = 1e6*intf.chem_driving_force()*intf.M()/ferr.Vm
+    # Calculate compositions at the interface
+    intf.comp(poly_deg=2)
+
+    # # Car
+    # J_fcc = intf.v*(intf.ci_fcc - intf.ci_bcc)
+
+    # aust.FDM_implicit(bcn=(1.5, -2., .5, -J_fcc*aust.dz/aust.D(C=aust.c[-1])))
+
+    # Solve FDM in austenite
+    aust.FDM_implicit(bcn=(1, 0, 0, intf.ci_fcc))
+    # Since carbon diffusion in ferrite is too fast and carbon in
+    # ferrite is low, for simplification assumes that the carbon
+    # is immediately homogenized
+    ferr.c[:] = intf.ci_bcc
+
+    # Update position of interfaces and interpolate compositions
+    aust.update_grid(it, vn=intf.v)
+    ferr.update_grid(it, v0=intf.v)
+
+    # Print iteration log and stores C profile data
+    log.printit(it, each)
+
+log.close()
+
+# Save carbon profiles
+# filename can be provide, creates directory C_profiles and
+# save data there
+log.save_cprofiles()
+# Save average carbon data (C_avg directory)
+log.save_properties('cavg')
+# Save interface compositions data (C_extremities directory)
+log.save_properties('ci*')
+# Save interface positions data (pos_extremities directory)
+log.save_properties('s*')
