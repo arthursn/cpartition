@@ -355,10 +355,10 @@ class Domain(object):
             if fnmatch(c, 'X(*)') and c != 'X(C)':
                 X, MU = c, 'MU(' + c[2:-1] + ')'
                 self.chempot[MU] += self.E
-                muZ += self.chempot[X]*self.chempot[MU]
+                muZ += self.chempot[X].values*self.chempot[MU].values
 
         self.chempot['X(Z)'] = 1 - self.chempot['X(C)'].values
-        self.chempot['MU(Z)'] = muZ.values/self.chempot['X(Z)']
+        self.chempot['MU(Z)'] = muZ/self.chempot['X(Z)']
         self.chempot['MU(C)'] += self.E
 
         self.x2mu['C'] = interp1d(self.chempot['X(C)'], self.chempot['MU(C)'],
