@@ -18,8 +18,8 @@ dt = control_itsteps.dt
 each = 20
 control_itsteps.print_summary()
 
-tdata_fcc = '../thermo/FoFo/375-FCC.TXT'
-tdata_bcc = '../thermo/FoFo/375-BCC.TXT'
+tdata_fcc = os.path.join('thermo', 'FoFo', '375-FCC.TXT')
+tdata_bcc = os.path.join('thermo', 'FoFo', '375-BCC.TXT')
 
 mart = BCC(T_C=T_C, dt=dt, z=np.linspace(-1.16, -.66, 50), c0=c0,
            tdata=tdata_bcc)
