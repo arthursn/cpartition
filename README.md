@@ -14,7 +14,7 @@ cpartition runs in python >= 3.5 using the following non-standard python librari
 - numpy
 - scipy
 - matplotlib
-- scipy
+- pandas
 - periodictable 
 
 First clone cpartition repository:
@@ -35,10 +35,10 @@ Use the `--user` option to install cpartition in the user folder:
 python3 setup.py install --user
 ```
 
-Please notice that `setuptools` must be install beforehand.
+Please notice that `setuptools` must be installed beforehand.
 
 If cpartition is installed using `setup.py`, all dependencies should be automatically solved. Otherwise, the required libraries can be installed from the [Python Package Index](https://pypi.org) using pip:
 
 ```bash
-pip3 install numpy scipy matplotlib scipy periodictable
+pip3 install numpy scipy matplotlib pandas periodictable
 ```
