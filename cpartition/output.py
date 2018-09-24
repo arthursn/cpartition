@@ -421,9 +421,12 @@ class CProfiles(object):
         if len(self.t) == 0:
             self.load_time()
 
-        for t in tlist:
-            matches, = np.where(self.t == t)
-            appendto += list(matches)
+        # Search for tlist in self.t
+        matches, = np.where(np.isin(self.t.astype(np.float32),
+                                    np.array(tlist).astype(np.float32),
+                                    assume_unique=True))
+        appendto += list(matches)
+
         return appendto
 
     def label_phases(self, ax, t, labels=[('aus1', r'$\gamma_1$', -1),
@@ -556,10 +559,10 @@ class CProfiles(object):
             for xkey, ykey in pairs:
                 try:
                     lines = ax.plot(self.df_si[xkey],
-                            func(self.df_ci[ykey]), *args, **kwargs)
+                                    func(self.df_ci[ykey]), *args, **kwargs)
                     if mirror:
                         lines = ax.plot(2*self.zz[0][-1] - self.df_si[xkey],
-                                func(self.df_ci[ykey]), *args, **kwargs)
+                                        func(self.df_ci[ykey]), *args, **kwargs)
                 except KeyError:
                     print('Key error')
                 except Exception as ex:
