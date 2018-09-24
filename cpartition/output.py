@@ -413,6 +413,9 @@ class CProfiles(object):
         return ax
 
     def where_tlist(self, tlist, appendto=[]):
+        """
+        Get indices of matching occurences of tlist in CPartition().t
+        """
         # loading profiles if not defined yet
         if len(self.df_cprofiles) == 0:
             self.load_cprofiles()
@@ -436,6 +439,9 @@ class CProfiles(object):
                                           ('fer1', r'$\alpha_{b1}$', 1),
                                           ('fer2', r'$\alpha_{b2}$', 1)],
                      mirror=False, **kwargs):
+        """
+        Label phases in a C profile plot
+        """
         if isinstance(t, list):
             t = t[-1]
         j, = self.where_tlist([t], [])
@@ -482,6 +488,9 @@ class CProfiles(object):
         return ax
 
     def get_cprofile(self, i, mirror=False, func=lambda x: x):
+        """
+        Select C profile for a given time index i
+        """
         z, c, t = self.zz[i], func(self.cc[i]), self.t[i]
 
         if mirror:
@@ -575,14 +584,3 @@ class CProfiles(object):
                     raise
 
         return lines
-
-
-if __name__ == '__main__':
-    cprof = CProfiles('coupled_FoFo_375_mu23e3',
-                      '/home/arthur/repositories/cpartition_simulations/C_profiles/')
-    ax = cprof.plot_cprofiles(tlist=[1e-2, 1e-1, 1, 6, 10, 100])
-    cprof.plot_locus_interface([('aus1.sn', 'aus1.cin'),
-                                ('aus2.s0', 'aus2.ci0'),
-                                ('aus2.sn', 'aus2.cin')], ax=ax, color='k', ls='--')
-    # plt.legend()
-    plt.show()
