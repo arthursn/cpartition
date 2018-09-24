@@ -481,6 +481,15 @@ class CProfiles(object):
 
         return ax
 
+    def get_cprofile(self, i, mirror=False, func=lambda x: x):
+        z, c, t = self.zz[i], func(self.cc[i]), self.t[i]
+
+        if mirror:
+            z = np.hstack([z, 2*z[-1] - z[::-1]])
+            c = np.hstack([c, c[::-1]])
+
+        return z, c, t
+
     def plot_cprofiles(self, ax=None, mirror=False, func=lambda x: x, **kwargs):
         """
         Plot carbon profiles using matplotlib plot
@@ -521,11 +530,7 @@ class CProfiles(object):
         # call plot for each item of the selection
         for i in sel[slc]:
             try:
-                z, c, t = self.zz[i], func(self.cc[i]), self.t[i]
-
-                if mirror:
-                    z = np.hstack([z, 2*z[-1] - z[::-1]])
-                    c = np.hstack([c, c[::-1]])
+                z, c, t = self.get_cprofile(i, mirror, func)
 
                 lines = ax.plot(z, c, label='t = {:g} s'.format(t), **kwargs)
             except IndexError:
