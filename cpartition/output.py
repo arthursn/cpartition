@@ -524,14 +524,14 @@ class CProfiles(object):
                     z = np.hstack([z, 2*z[-1] - z[::-1]])
                     c = np.hstack([c, c[::-1]])
 
-                ax.plot(z, c, label='t = {:g} s'.format(t), **kwargs)
+                lines = ax.plot(z, c, label='t = {:g} s'.format(t), **kwargs)
             except IndexError:
                 print('Index {} is out of bounds'.format(i))
             except:
                 print('Unexpected error')
                 raise
 
-        return ax
+        return lines
 
     def plot_locus_interface(self, pairs, ax=None, mirror=False, func=lambda x: x, *args, **kwargs):
         """
@@ -555,10 +555,10 @@ class CProfiles(object):
 
             for xkey, ykey in pairs:
                 try:
-                    ax.plot(self.df_si[xkey],
+                    lines = ax.plot(self.df_si[xkey],
                             func(self.df_ci[ykey]), *args, **kwargs)
                     if mirror:
-                        ax.plot(2*self.zz[0][-1] - self.df_si[xkey],
+                        lines = ax.plot(2*self.zz[0][-1] - self.df_si[xkey],
                                 func(self.df_ci[ykey]), *args, **kwargs)
                 except KeyError:
                     print('Key error')
@@ -566,7 +566,7 @@ class CProfiles(object):
                     print('Unexpected error: {}'.format(ex))
                     raise
 
-        return ax
+        return lines
 
 
 if __name__ == '__main__':
