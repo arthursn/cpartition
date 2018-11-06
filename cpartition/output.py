@@ -203,6 +203,11 @@ class SimulationLog(object):
         df_profiles = pd.DataFrame(dict(z=zz, c=cc, strct=ss),
                                    columns=['z', 'c', 'strct'])
 
+        # check if C_profiles dir exist. If not, creates one
+        directory = 'C_profiles'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         # saves dataframe time
         try:
             fname = os.path.join(
