@@ -132,12 +132,14 @@ class SimulationLog(object):
         if self.flush:
             self.f_log.flush()
 
-    def printit(self, it, criteria=lambda it, each: (it+1) % each == 0, *args):
+    def printit(self, it, *args, **kwargs):
         """
         Print details of the current iteration during the simulation.
         Use the argument 'criteria' to set the criteria for printing such
         data.
         """
+        criteria = kwargs.pop('criteria', lambda it, each: (it+1) % each == 0)
+
         if criteria(it, *args):
             t, z, c, strct, cavg = self.merge_domains()
 
