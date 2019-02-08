@@ -372,7 +372,7 @@ class CProfiles(object):
             self.read_header()
 
         try:
-            df = pd.read_table(self.fname_time, sep=' ', comment='#')
+            df = pd.read_csv(self.fname_time, sep=' ', comment='#')
             self.t = df['t'].values  # numpy array for time
         except:
             self.t = np.linspace(self.ti, self.tf, self.ntime)
@@ -386,7 +386,7 @@ class CProfiles(object):
         if len(self.header) == 0:
             self.read_header()
 
-        self.df_cprofiles = pd.read_table(
+        self.df_cprofiles = pd.read_csv(
             self.fname_profiles, sep=' ', comment='#')
 
         self.zz = self.df_cprofiles['z'].values.reshape(-1, self.n)
@@ -570,12 +570,12 @@ class CProfiles(object):
             if len(self.df_ci) == 0:
                 fname = os.path.join(
                     'C_extremities', '{}.txt'.format(self.basename))
-                self.df_ci = pd.read_table(fname, sep=' ', comment='#')
+                self.df_ci = pd.read_csv(fname, sep=' ', comment='#')
 
             if len(self.df_si) == 0:
                 fname = os.path.join(
                     'pos_extremities', '{}.txt'.format(self.basename))
-                self.df_si = pd.read_table(fname, sep=' ', comment='#')
+                self.df_si = pd.read_csv(fname, sep=' ', comment='#')
 
             for xkey, ykey in pairs:
                 try:
