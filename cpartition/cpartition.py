@@ -740,7 +740,7 @@ class Interface(object):
         except:
             raise Exception('Invalid option')
 
-        self.M0 = kwargs.pop('M0', 2.e-4)
+        self.M0 = kwargs.pop('M0', 2.e-5)
         self.Qa = kwargs.pop('Qa', 140e3)
 
         self.initialize()
