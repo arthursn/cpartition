@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import sys, os
+import sys
+import os
 from itertools import cycle
 
-import numpy as np 
+import numpy as np
 import pandas as pd
 
 from scipy.sparse import spdiags, csc_matrix
@@ -15,17 +16,18 @@ from fnmatch import fnmatch
 
 from .tab_datafile import load_table
 
-
-K = 273.15
+# Fundamental constants
+K = 273.15              # 0 degrees Celsius in Kelvin
 R = 8.3144598           # Gas constant in J/(K.mol)
-kB = 1.38064852e-23     # Boltzmann constant in J/K
-Tr = 25.                # room temperature
+
+WBS_TCK = splrep([-200., 300., 450., 700., 800.],
+                 [6000., 2329., 1283., 107., 4.])  # spline parameters for calculation of the WBs energy barrier
 
 
 def WBs(T_C):
     """
     Calculates the extra energy for growth of bainite and Widmansttaten ferrite
-    
+
     Parameters
     ----------
     T_C : float
@@ -37,8 +39,8 @@ def WBs(T_C):
         elements in the formation of bainitic ferrite. Metall. Mater. Trans. A 
         35, 3693--3700 (2004).
     """
-    tck = splrep([-200., 300., 450., 700., 800.], [6000., 2329., 1283., 107., 4.])
-    return splev(T_C, tck)
+
+    return splev(T_C, WBS_TCK)
 
 
 class Domain(object):
@@ -48,7 +50,7 @@ class Domain(object):
              2: 2, 'comp.initial': 2, 'initial': 2, 'init': 2, 'c0': 2,
              3: 3, 'pseudophase': 3, 'carbides': 3}
     # label code for the diffusion coefficient
-    lcode = {0: '0 (comp.local)', 
+    lcode = {0: '0 (comp.local)',
              1: '1 (comp.avg)',
              2: '2 (comp.initial)',
              3: '3 (pseudophase alpha + carbides)'}
@@ -69,15 +71,15 @@ class Domain(object):
             except:
                 self.n = kwargs.pop('n', 100)   # number of nodes in the grid
             self.z = np.linspace(self.z0, self.zn, self.n)  # position of each node
-        
+
         if self.c is None:
             self.c0 = kwargs.pop('c0', 0)   # value at t=0
             try:
                 self.n = len(self.z)
             except:
                 self.n = kwargs.pop('n', 100)   # number of nodes in the grid
-            self.c = np.full(self.n, self.c0) # composition in the instant t
-        
+            self.c = np.full(self.n, self.c0)  # composition in the instant t
+
         self.it = []  # iteration number
         self._t = []
         self._ci0 = []
@@ -109,7 +111,7 @@ class Domain(object):
     def ci0(self):
         """Interfacial composition (node 0)"""
         return np.array(self._ci0)
-    
+
     @property
     def cin(self):
         """Interfacial composition (node n)"""
@@ -143,7 +145,7 @@ class Domain(object):
         df.rename(columns=lambda s: sep.join(prefix + [s]), inplace=True)
         # rename index to correspond iteration numbers
         df.index = self.it
-        
+
         return df
 
     def initialize_grid(self, reset=True):
@@ -173,7 +175,7 @@ class Domain(object):
         self._c = np.zeros(self.c.shape)  # self._c is used for solving the FDM
         self._c1 = np.zeros(self.c.shape)  # self._c is used for solving the explicit FDM
         self._b = np.zeros(self.c.shape)  # self._b is used for solving the implicit FDM
-        
+
         self.r = np.zeros(self.c.shape)
         self.g = np.zeros(self.c.shape)
 
@@ -189,18 +191,18 @@ class Domain(object):
         else:
             self.activate()
 
-    def FDM_implicit(self, bc0=[-1.5,2.,-.5,0.], bcn=[1.5,-2.,.5,0.], lowerbound=0):
+    def FDM_implicit(self, bc0=[-1.5, 2., -.5, 0.], bcn=[1.5, -2., .5, 0.], lowerbound=0):
         """
         Calculate one step of the implicit Finite Elements Method for Fick's 
         second law equation.
-        
+
         Parameters
         ----------
         bc0 : array_like
             Parameters for the boundary condition at the 0-th node
         bcn : array_like
             Parameters for the boundary condition at the n-th node
-        
+
         At the 0-th node, the correspondent linear equation is given by 
         bc0[0]*c[0] + bc0[1]*c[1] + bc0[1]*c[2] = bc0[3].
         At the n-th node, the correspondent linear equation is given by 
@@ -235,24 +237,24 @@ class Domain(object):
 
         # Solve the linear system A*c = b
         self._c = dsolve.spsolve(A, self._b, use_umfpack=True)
-        
+
         if self._c[0] < lowerbound or self._c[-1] < lowerbound:
             return True
 
         self.c[:] = self._c
 
-    def FDM_explicit(self, bc0=[1.5,-2.,.5,0.], bcn=[1.5,-2.,.5,0.]):
+    def FDM_explicit(self, bc0=[1.5, -2., .5, 0.], bcn=[1.5, -2., .5, 0.]):
         """
         Calculate one step of the explicit Finite Elements Method for Fick's
         second law equation.
-        
+
         Parameters
         ----------
         bc0 : array_like
             Parameters for the boundary condition at the 0-th node
         bcn : array_like
             Parameters for the boundary condition at the n-th node
-        
+
         At the 0-th node, the correspondent linear equation is given by 
         bc0[0]*c[0] + bc0[1]*c[1] + bc0[1]*c[2] = bc0[3].
         At the n-th node, the correspondent linear equation is given by
@@ -332,7 +334,7 @@ class Domain(object):
 
         if isinstance(x, list):
             x = np.array(x)
-        # select X(*) like columns 
+        # select X(*) like columns
         xcols = [c for c in self.chempot.columns if fnmatch(c, 'X(*)') and c != 'X(Z)']
         # created DataFrame with selected columns and rename them accordingly
         dfx = self.chempot[xcols].rename(mapper=lambda c: c[2:-1].title(), axis='columns')
@@ -362,14 +364,14 @@ class Domain(object):
         self.chempot['MU(C)'] += self.E
 
         self.x2mu['C'] = interp1d(self.chempot['X(C)'], self.chempot['MU(C)'],
-                        fill_value='extrapolate')  # X(C) to MU(C)
+                                  fill_value='extrapolate')  # X(C) to MU(C)
         self.x2mu['Z'] = interp1d(self.chempot['X(C)'], self.chempot['MU(Z)'],
-                        fill_value='extrapolate')  # X(C) to MU(Z)
+                                  fill_value='extrapolate')  # X(C) to MU(Z)
         self.mu2x['C'] = interp1d(self.chempot['MU(C)'], self.chempot['X(C)'],
-                        fill_value='extrapolate')  # MU(C) to X(C)
+                                  fill_value='extrapolate')  # MU(C) to X(C)
 
         self.muC2muZ = interp1d(self.chempot['MU(C)'], self.chempot['MU(Z)'],
-                        fill_value='extrapolate')
+                                fill_value='extrapolate')
 
 
 class BCC(Domain):
@@ -428,7 +430,7 @@ class BCC(Domain):
 
         self.type_D = type_D
         try:
-            self.type_D =  self.tcode[self.type_D]
+            self.type_D = self.tcode[self.type_D]
         except:
             raise Exception('Invalid option')
 
@@ -450,7 +452,8 @@ class BCC(Domain):
 
         if self.tdata:
             try:
-                self.chempot = load_table(self.tdata, 'X(C)', ignorephaseregions='*#2')  # Loads thermodynamical data from tdata file
+                # Loads thermodynamical data from tdata file
+                self.chempot = load_table(self.tdata, 'X(C)', ignorephaseregions='*#2')
             except:
                 raise Exception('Cannot load file "{}".'.format(self.tdata))
             else:
@@ -460,19 +463,20 @@ class BCC(Domain):
                 # is described by the ideal solution approximation:
                 # mu = RT log(G*x) = RT (log(x) + log(G)) => log(x) = mu/RT - log(G)
                 # It must be used VERY CAREFULLY, once the extrapolated values of muC might significantly
-                # deviate from the real values for high carbon contents.            
+                # deviate from the real values for high carbon contents.
                 def func(mu, logG):
                     return mu/self.RT - logG
                 popt, pcov = curve_fit(func, self.chempot['MU(C)'], np.log(self.chempot['X(C)']))
-                RTlogG = lambda: self.RT*popt[0]    # RT log(G), where G is the activity coefficient
+
+                def RTlogG(): return self.RT*popt[0]    # RT log(G), where G is the activity coefficient
         else:
             print('Warning! tdata=None does not support mobiles interfaces')
-            
+
             cypar = cycle(['A', 'B', 'C', 'D', 'E', 'F'])
             self.tdata = '; '.join(['{} = {:.3f}'.format(next(cypar), par) for par in self.tpar])
 
             # Again, ideal solution approximation is used, but considering the supplied tpar parameters
-            RTlogG = lambda: self.tpar[0] + self.tpar[1]*self.T + self.E  # RT log(G)
+            def RTlogG(): return self.tpar[0] + self.tpar[1]*self.T + self.E  # RT log(G)
 
         self.x2mu['C'] = lambda x: self.RT*np.log(x) + RTlogG()  # Inform carbon comp. (x), return chem. pot. (mu)
         self.mu2x['C'] = lambda mu: np.exp((mu - RTlogG())/self.RT)  # Inform mu, return x
@@ -488,12 +492,12 @@ class BCC(Domain):
             Mole fraction of carbon in solid solution in the BCC phase. Agren's 
             equation does not take composition dependence into account for 
             computing D, so changing C has no effect in the returned value
-        
+
         Returns
         -------
         D : float
             Diffusion coefficient in um^2/s
-        
+
         References
         ----------
         .. [1] J. Agren, 'Diffusion in phases with several components and 
@@ -528,6 +532,7 @@ class BCC(Domain):
             self.g[:] = .25*(D - D1)*self.dt/self.dz**2
         else:
             self.g.fill(0)
+
 
 class FCC(Domain):
     """
@@ -577,7 +582,7 @@ class FCC(Domain):
 
         self.type_D = type_D
         try:
-            self.type_D =  self.tcode[self.type_D]
+            self.type_D = self.tcode[self.type_D]
         except:
             raise Exception('Invalid option')
 
@@ -603,7 +608,7 @@ class FCC(Domain):
                 self.prepare_tdata()
         else:
             print('Warning! tdata=None does not support mobiles interfaces')
-            
+
             if len(self.tpar) > 6:
                 raise Exception('tpar length must not be longer than 6')
 
@@ -616,9 +621,9 @@ class FCC(Domain):
 
             # Quadratic approximation for RT log(G)
             # RT log(G) = A + B*T + (C + D*T)*x + (E + F*T)*x
-            RTlogG = lambda x: self.tpar[0] + self.tpar[1]*self.T + \
-                            (self.tpar[2] + self.tpar[3]*self.T)*x + \
-                            (self.tpar[4] + self.tpar[5]*self.T)*x**2. + self.E
+            def RTlogG(x): return self.tpar[0] + self.tpar[1]*self.T + \
+                (self.tpar[2] + self.tpar[3]*self.T)*x + \
+                (self.tpar[4] + self.tpar[5]*self.T)*x**2. + self.E
 
             self.x2mu['C'] = lambda x: self.RT*np.log(x) + RTlogG(x)
             # TO DO: IMPLEMENT mu2x
@@ -633,7 +638,7 @@ class FCC(Domain):
         ----------
         C : float, numpy array
             Molar fraction of carbon in solid solution in the FCC phase.
-        
+
         Returns
         -------
         D : float, numpy array
@@ -646,8 +651,8 @@ class FCC(Domain):
             1507--1510, Nov. 1986.
         """
         yC = C/(1. - C)
-        D0 = 4.53e5*(1. + yC*(1.-yC)*8339.9/self.T) # Pre-exponential term
-        D = D0*np.exp(-(1./self.T - 2.221e-4)*(17767 - yC*26436)) # um^2/s
+        D0 = 4.53e5*(1. + yC*(1.-yC)*8339.9/self.T)  # Pre-exponential term
+        D = D0*np.exp(-(1./self.T - 2.221e-4)*(17767 - yC*26436))  # um^2/s
         return D
 
     def get_r(self):
@@ -676,7 +681,7 @@ class FCC(Domain):
 class Interface(object):
     """
     Initialize interface
-    
+
     Parameters
     ----------
     domain1 : FCC or BCC object
@@ -699,7 +704,7 @@ class Interface(object):
         - {3, mobile.mmode, mmode, mixed}: for ferrite/austenite 
         interfaces. Mixed-mode approach. Equality of chemical potentials is
         considered
-    
+
     **kwargs :
         Parameters for the interface mobility equation (M = M0 exp(-Qa/RT))
         M0 : float
@@ -711,7 +716,7 @@ class Interface(object):
     # type code for the boundary conditions at the interface
     tcode = {0: 0, 'fixed.balance': 0, 'fixed.bal': 0, 'balance': 0, 'bal': 0, 'fixed': 0,
              1: 1, 'fixed.fluxes': 1, 'fixed.flux': 1, 'fluxes': 1, 'flux': 1,
-             2: 2, 'mobile.equilibrium': 2, 'mobile.eq': 2, 'equilibrium': 2, 'eq': 2, 'mobile': 2, 
+             2: 2, 'mobile.equilibrium': 2, 'mobile.eq': 2, 'equilibrium': 2, 'eq': 2, 'mobile': 2,
              3: 3, 'mobile.mmode': 3, 'mmode': 3, 'mixed': 3}
     # label code for the boundary conditions at the interface
     lcode = {0: '0 (fixed.balance)',
@@ -763,7 +768,7 @@ class Interface(object):
         elif self.type_int == 1:
             self.comp = self.stefan_local_equilibrium
         elif self.type_int == 2:
-            g = lambda x: self.fcc.muC2muZ(x) - self.bcc.muC2muZ(x)
+            def g(x): return self.fcc.muC2muZ(x) - self.bcc.muC2muZ(x)
             lo = max(min(self.fcc.chempot['MU(C)']), min(self.bcc.chempot['MU(C)']))
             hi = min(max(self.fcc.chempot['MU(C)']), max(self.bcc.chempot['MU(C)']))
             muC_eq = bisect(g, lo, hi, xtol=1e-3)
@@ -779,7 +784,7 @@ class Interface(object):
             self.k = lambda x: (self.fcc.D(C=self.fcc.get_cavg())*self.bcc.dz)/(self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
         elif self.fcc.type_D == 2:
             self.k = lambda x: (self.fcc.D(C=self.fcc.c0)*self.bcc.dz)/(self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
-    
+
     def activate(self):
         self.active = True
 
@@ -809,8 +814,8 @@ class Interface(object):
         """
         Calculate the diffusion coefficient of carbon at the interface
         """
-        self.update_y() # Important!
-        
+        self.update_y()  # Important!
+
         D_bcc = self.bcc.D(C=self.y_bcc[0])
 
         if self.fcc.type_D == 0:
@@ -820,13 +825,13 @@ class Interface(object):
         elif self.fcc.type_D == 2:
             c_fcc = self.fcc.c0
         D_fcc = self.fcc.D(C=c_fcc)
-        
+
         return D_bcc, D_fcc
 
     def CCE(self, c_fcc):
         """
         Receives c_fcc as input and returns c_bcc with same chemical potential.
-        
+
         Parameters
         ----------
         c_fcc : float
@@ -857,22 +862,22 @@ class Interface(object):
         self.update_y()
         if self.v == 0.:
             if kwargs.pop('poly_deg', 2) == 2:
-                f = lambda x: (self.CCE(x) - self.y_bcc[1])/self.k(x) + (x - self.y_fcc[1])
+                def f(x): return (self.CCE(x) - self.y_bcc[1])/self.k(x) + (x - self.y_fcc[1])
             else:
-                f = lambda x: (1.5*self.CCE(x) - 2.*self.y_bcc[1] + \
-                        .5*self.y_bcc[2])/self.k(x) + \
-                        (1.5*x - 2.*self.y_fcc[1] + .5*self.y_fcc[2])
+                def f(x): return (1.5*self.CCE(x) - 2.*self.y_bcc[1] +
+                                  .5*self.y_bcc[2])/self.k(x) + \
+                    (1.5*x - 2.*self.y_fcc[1] + .5*self.y_fcc[2])
         else:
             # BE EXTRA CAREFUL
             if kwargs.pop('poly_deg', 2) == 2:
-                f = lambda x: (self.CCE(x) - self.y_bcc[1]) + \
-                        (x - self.y_fcc[1])*self.k(x) - \
-                        (-1.)**self.p_bcc*self.v*(x - self.CCE(x))*self.bcc.dz/self.bcc.D(C=self.CCE(x))
+                def f(x): return (self.CCE(x) - self.y_bcc[1]) + \
+                    (x - self.y_fcc[1])*self.k(x) - \
+                    (-1.)**self.p_bcc*self.v*(x - self.CCE(x))*self.bcc.dz/self.bcc.D(C=self.CCE(x))
             else:
-                f = lambda x: (1.5*self.CCE(x) - 2.*self.y_bcc[1] + .5*self.y_bcc[2]) + \
-                        (1.5*x - 2.*self.y_fcc[1] + .5*self.y_fcc[2])*self.k(x) - \
-                        (-1.)**self.p_bcc*self.v*(x - self.CCE(x))*self.bcc.dz/self.bcc.D(C=self.CCE(x))
-            
+                def f(x): return (1.5*self.CCE(x) - 2.*self.y_bcc[1] + .5*self.y_bcc[2]) + \
+                    (1.5*x - 2.*self.y_fcc[1] + .5*self.y_fcc[2])*self.k(x) - \
+                    (-1.)**self.p_bcc*self.v*(x - self.CCE(x))*self.bcc.dz/self.bcc.D(C=self.CCE(x))
+
         guess = kwargs.pop('guess', self.y_fcc[0])
         try:
             self.ci_fcc = newton(func=f, x0=guess)
@@ -893,7 +898,7 @@ class Interface(object):
         ----------
         c0 : float
             Initial composition of the domain
-        
+
         **kwargs :
             guess : float
                 Initial guess for Newton method used to solve the problem
@@ -901,7 +906,9 @@ class Interface(object):
         self.update_y()
         sum_bcc = np.sum(self.bcc.c[1:-1]) + .5*self._y_bcc
         sum_fcc = np.sum(self.fcc.c[1:-1]) + .5*self._y_fcc
-        f = lambda x: (.5*self.CCE(x) + sum_bcc)*self.bcc.dz + (.5*x + sum_fcc)*self.fcc.dz - c0*(self.bcc.L + self.fcc.L)
+
+        def f(x): return (.5*self.CCE(x) + sum_bcc)*self.bcc.dz + \
+            (.5*x + sum_fcc)*self.fcc.dz - c0*(self.bcc.L + self.fcc.L)
         guess = kwargs.pop('guess', self.y_fcc[0])
         self.ci_fcc = newton(func=f, x0=guess)
         self.ci_bcc = self.CCE(self.ci_fcc)
@@ -910,13 +917,13 @@ class Interface(object):
     def chem_driving_force(self, **kwargs):
         """
         Calculates chemical driving force
-        
+
         Parameters
         ----------
         **kwargs
             ci_bcc and ci_fcc : float
                 Interfacial compositions (carbon)
-        
+
         Returns
         -------
         F : float
@@ -938,7 +945,7 @@ class Interface(object):
         M = self.M0*np.exp(-self.Qa/(self.RT))
         return M
 
-    def flux(self, who=['bcc','fcc'], nnodes=3):
+    def flux(self, who=['bcc', 'fcc'], nnodes=3):
         """
         Calculates flux at the interfaces of both domains. The gradient is 
         evaluated using Lagrangian interpolation of either the 3 (nnodes=3)
@@ -988,7 +995,7 @@ class Interface(object):
 def merge_domains(*domains):
     """
     Merge domains (FCC and/or BCC objects)
-    
+
     Parameters
     ---------
     *domains : 
