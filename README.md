@@ -6,6 +6,12 @@ Different boundary conditions can be set depending on the taste of the user. The
 
 Examples of use are simulation of kinetics of carbon redistribution during heat treatments, such as carburizing and the Quenching and Partitioning process.
 
+Please refer to the following publications for detailed description of application and examples of utilization:
+
+1. [A.S. Nishikawa, M.J. Santofimia, J. Sietsma, H. Goldenstein, Acta Mater. 142 (2018) 142-151.](https://dx.doi.org/10.1016/j.actamat.2017.09.048)
+
+2. [A.S. Nishikawa, G. Miyamoto, T. Furuhara, A.P. Tschiptschin, H. Goldenstein, Acta Mater. 179 (2019) 1-16.](https://dx.doi.org/10.1016/j.actamat.2019.08.001)
+
 # Installation and requirements
 
 cpartition runs in python >= 3.5 using the following non-standard python libraries:
