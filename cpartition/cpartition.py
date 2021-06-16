@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import sys
-import os
 from itertools import cycle
 
 import numpy as np
@@ -10,7 +8,7 @@ import pandas as pd
 from scipy.sparse import spdiags, csc_matrix
 from scipy.sparse.linalg import dsolve
 from scipy.optimize import newton, bisect, curve_fit
-from scipy.interpolate import UnivariateSpline, interp1d, splrep, splev
+from scipy.interpolate import interp1d, splrep, splev
 
 from fnmatch import fnmatch
 
@@ -20,8 +18,9 @@ from .tab_datafile import load_table
 K = 273.15              # 0 degrees Celsius in Kelvin
 R = 8.3144598           # Gas constant in J/(K.mol)
 
+# spline parameters for calculation of the WBs energy barrier
 WBS_TCK = splrep([-200., 300., 450., 700., 800.],
-                 [6000., 2329., 1283., 107., 4.])  # spline parameters for calculation of the WBs energy barrier
+                 [6000., 2329., 1283., 107., 4.])
 
 
 def WBs(T_C):
@@ -65,10 +64,11 @@ class Domain(object):
         self.t0 = kwargs.pop('t0', 0)  # initial time used for reference
 
         if self.z is None:
-            self.z0, self.zn = kwargs.pop('z0', 0.), kwargs.pop('zn', 1.)  # positions at th 0-th and n-th nodes
+            # positions at th 0-th and n-th nodes
+            self.z0, self.zn = kwargs.pop('z0', 0.), kwargs.pop('zn', 1.)
             try:
                 self.n = len(self.c)
-            except:
+            except Exception:
                 self.n = kwargs.pop('n', 100)   # number of nodes in the grid
             self.z = np.linspace(self.z0, self.zn, self.n)  # position of each node
 
@@ -76,7 +76,7 @@ class Domain(object):
             self.c0 = kwargs.pop('c0', 0)   # value at t=0
             try:
                 self.n = len(self.z)
-            except:
+            except Exception:
                 self.n = kwargs.pop('n', 100)   # number of nodes in the grid
             self.c = np.full(self.n, self.c0)  # composition in the instant t
 
@@ -431,14 +431,15 @@ class BCC(Domain):
         self.type_D = type_D
         try:
             self.type_D = self.tcode[self.type_D]
-        except:
+        except Exception:
             raise Exception('Invalid option')
 
         self.c_carbide = kwargs.pop('c_carbide', 0.25)
         self.cmax_bcc = kwargs.pop('cmax_bcc', 0)
 
         self.tdata = tdata
-        self.tpar = tpar  # thermodynamical parameters obtained after fitting of chemical potential curves
+        # thermodynamical parameters obtained after fitting of chemical potential curves
+        self.tpar = tpar
 
         self.prepare_chempot()
 
@@ -462,24 +463,28 @@ class BCC(Domain):
                 # I'm assuming that the relation between the chemical potential and the composition
                 # is described by the ideal solution approximation:
                 # mu = RT log(G*x) = RT (log(x) + log(G)) => log(x) = mu/RT - log(G)
-                # It must be used VERY CAREFULLY, once the extrapolated values of muC might significantly
-                # deviate from the real values for high carbon contents.
+                # It must be used VERY CAREFULLY, once the extrapolated values of muC might
+                # significantly deviate from the real values for high carbon contents.
                 def func(mu, logG):
                     return mu/self.RT - logG
                 popt, pcov = curve_fit(func, self.chempot['MU(C)'], np.log(self.chempot['X(C)']))
 
-                def RTlogG(): return self.RT*popt[0]    # RT log(G), where G is the activity coefficient
+                # RT log(G), where G is the activity coefficient
+                def RTlogG(): return self.RT*popt[0]
         else:
             print('Warning! tdata=None does not support mobiles interfaces')
 
             cypar = cycle(['A', 'B', 'C', 'D', 'E', 'F'])
             self.tdata = '; '.join(['{} = {:.3f}'.format(next(cypar), par) for par in self.tpar])
 
-            # Again, ideal solution approximation is used, but considering the supplied tpar parameters
+            # Again, ideal solution approximation is used, but considering the supplied
+            # tpar parameters
             def RTlogG(): return self.tpar[0] + self.tpar[1]*self.T + self.E  # RT log(G)
 
-        self.x2mu['C'] = lambda x: self.RT*np.log(x) + RTlogG()  # Inform carbon comp. (x), return chem. pot. (mu)
-        self.mu2x['C'] = lambda mu: np.exp((mu - RTlogG())/self.RT)  # Inform mu, return x
+        # Inform carbon comp. (x), return chem. pot. (mu)
+        self.x2mu['C'] = lambda x: self.RT*np.log(x) + RTlogG()
+        # Inform mu, return x
+        self.mu2x['C'] = lambda mu: np.exp((mu - RTlogG())/self.RT)
 
     def D(self, C=0):
         """
@@ -583,11 +588,12 @@ class FCC(Domain):
         self.type_D = type_D
         try:
             self.type_D = self.tcode[self.type_D]
-        except:
+        except Exception:
             raise Exception('Invalid option')
 
         self.tdata = tdata
-        self.tpar = tpar  # thermodynamical parameters obtained after fitting of chemical potential curves
+        # thermodynamical parameters obtained after fitting of chemical potential curves
+        self.tpar = tpar
 
         self.prepare_chempot()
 
@@ -602,7 +608,7 @@ class FCC(Domain):
         if self.tdata:
             try:
                 self.chempot = load_table(self.tdata, 'X(C)', ignorephaseregions='*#2')
-            except:
+            except Exception:
                 raise Exception('Cannot load file "{}".'.format(self.tdata))
             else:
                 self.prepare_tdata()
@@ -742,7 +748,7 @@ class Interface(object):
         self.type_int = self.tcode[type_int]
         try:
             self.type_int = self.tcode[self.type_int]
-        except:
+        except Exception:
             raise Exception('Invalid option')
 
         self.M0 = kwargs.pop('M0', 2.e-5)
@@ -757,7 +763,8 @@ class Interface(object):
         Redefines methods 'CCE' and 'k' of this class depending on the chosen
         options for interface.
         """
-        self.update_y()     # updates y values (composition in the nodes at the vicinity of the interface)
+        # updates y values (composition in the nodes at the vicinity of the interface)
+        self.update_y()
 
         self.RT = R*self.bcc.T   # RT
         self.ci_bcc, self.ci_fcc = self.y_bcc[0], self.y_fcc[0]   # Interfacial compositions
@@ -779,11 +786,14 @@ class Interface(object):
             self.comp = self.stefan_local_equilibrium
 
         if self.fcc.type_D == 0:
-            self.k = lambda x: (self.fcc.D(C=x)*self.bcc.dz)/(self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
+            self.k = lambda x: (self.fcc.D(C=x)*self.bcc.dz) / \
+                (self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
         elif self.fcc.type_D == 1:
-            self.k = lambda x: (self.fcc.D(C=self.fcc.get_cavg())*self.bcc.dz)/(self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
+            self.k = lambda x: (self.fcc.D(C=self.fcc.get_cavg())*self.bcc.dz) / \
+                (self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
         elif self.fcc.type_D == 2:
-            self.k = lambda x: (self.fcc.D(C=self.fcc.c0)*self.bcc.dz)/(self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
+            self.k = lambda x: (self.fcc.D(C=self.fcc.c0)*self.bcc.dz) / \
+                (self.bcc.D(C=self.y_bcc[0])*self.fcc.dz)
 
     def activate(self):
         self.active = True
@@ -881,7 +891,7 @@ class Interface(object):
         guess = kwargs.pop('guess', self.y_fcc[0])
         try:
             self.ci_fcc = newton(func=f, x0=guess)
-        except:
+        except Exception:
             print('Cannot solve Stefan problem')
             print('y_fcc[0]={}, y_fcc[1]={}, y_bcc[0]={}, v={}'.format(
                 self.y_fcc[0], self.y_fcc[1], self.y_bcc[1], self.v))

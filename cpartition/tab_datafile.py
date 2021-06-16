@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from builtins import open
-from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -11,7 +10,7 @@ from fnmatch import fnmatch
 def _isfloat(x):
     try:
         float(x)
-    except:
+    except Exception:
         return False
     return True
 
@@ -152,7 +151,7 @@ def load_table(fname, sort=None, fill=None, unique=True, ignorephaseregions=''):
             df = df.sort_values(by=sort)
         except KeyError:
             print('Invalid sorting key(s). Data not sorted.')
-        except:
+        except Exception:
             raise
 
         if unique:

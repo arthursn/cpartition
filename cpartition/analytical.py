@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.special import erfc
+from scipy.optimize import newton
+
+K = 273.15
 
 
 def Andrews(C=0., Mn=0., Ni=0., Cr=0., Mo=0.):

@@ -6,7 +6,6 @@ import time
 import matplotlib.pyplot as plt
 
 from .conversion import x2wp
-from .cpartition import BCC, FCC, Interface
 
 
 class SimulationLog(object):
@@ -213,7 +212,7 @@ class SimulationLog(object):
             fname = os.path.join(
                 'C_profiles', '{}_time.txt'.format(self.basename))
             df_time.to_csv(fname, index=False, sep=' ', float_format='%.6e')
-        except:
+        except Exception:
             raise
         else:
             print('File "{}" successfully created'.format(fname))
@@ -229,7 +228,7 @@ class SimulationLog(object):
             fileout.close()
             df_profiles.to_csv(fname, index=False, sep=' ',
                                float_format='%.6e', mode='a')
-        except:
+        except Exception:
             raise
         else:
             print('File "{}" successfully created'.format(fname))
@@ -289,7 +288,7 @@ class SimulationLog(object):
             try:
                 df.to_csv(fname, index=False, sep=' ',
                           float_format='%.6e', na_rep='nan')
-            except:
+            except Exception:
                 raise
             else:
                 print('File "{}" successfully created'.format(fname))
@@ -358,7 +357,7 @@ class CProfiles(object):
             self.ti = float(self.header['ti'])
             self.tf = float(self.header['tf'])
             self.tstep = float(self.header['tstep'])
-        except:
+        except Exception:
             self.ntime = None
             self.ti = None
             self.tf = None
@@ -374,7 +373,7 @@ class CProfiles(object):
         try:
             df = pd.read_csv(self.fname_time, sep=' ', comment='#')
             self.t = df['t'].values  # numpy array for time
-        except:
+        except Exception:
             self.t = np.linspace(self.ti, self.tf, self.ntime)
 
         _, self.tt = np.meshgrid(np.arange(self.n), self.t)
@@ -394,7 +393,7 @@ class CProfiles(object):
 
         try:
             self.ss = self.df_cprofiles['strct'].values.reshape(-1, self.n)
-        except:
+        except Exception:
             pass
 
     def plot_colormap(self, ax=None, mirror=False, func=lambda x: x, **kwargs):
@@ -551,7 +550,7 @@ class CProfiles(object):
                 lines = ax.plot(z, c, label='t = {:g} s'.format(t), **kwargs)
             except IndexError:
                 print('Index {} is out of bounds'.format(i))
-            except:
+            except Exception:
                 print('Unexpected error')
                 raise
 
