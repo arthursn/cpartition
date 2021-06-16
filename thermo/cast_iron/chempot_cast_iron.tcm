@@ -1,0 +1,40 @@
+go data
+def-sy fe c mn si cu
+rej ph *
+rest ph fcc bcc
+get
+go p-3
+
+ent-sy tab chempot
+x(*) mu(*);
+
+c-s ph *
+sus
+c-s ph bcc
+ent,,
+s-c t=648.15 n=1 p=101325
+s-c w(c)=0.001 y(bcc,mn)=1.990334e-03
+s-c y(bcc,si)=5.040450e-02 y(bcc,cu)=3.273561e-03
+c-e
+c-e
+c-e
+s-a-v 1 w(c) 0 0.01 0.0001
+step,,,
+tab chempot file 375-bcc.txt
+save , y
+
+c-n-e,,,
+c-s ph *
+sus
+c-s ph fcc
+ent,,
+s-c t=648.15 n=1 p=101325
+s-c w(c)=0.001 y(fcc,mn)=1.990334e-03
+s-c y(fcc,si)=5.040450e-02 y(fcc,cu)=3.273561e-03
+c-e
+c-e
+c-e
+s-a-v 1 w(c) 0 0.1 0.001
+step,,,
+tab chempot file 375-fcc.txt
+save , y
