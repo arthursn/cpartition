@@ -1,10 +1,7 @@
 import numpy as np
-import time
-
 import os
-import sys
-from cpartition import *
-from scipy.interpolate import interp1d
+from cpartition import (BCC, FCC, Interface,
+                        ControlIterationSteps, SimulationLog)
 
 basename = os.path.basename(__file__).replace('.py', '')
 
@@ -21,8 +18,8 @@ each = 200
 control_itsteps.print_summary()
 
 # Files containing the chemical potentials of bcc and fcc phases
-tdata_fcc = os.path.join('thermo', 'FoFo', '375-FCC.TXT')
-tdata_bcc = os.path.join('thermo', 'FoFo', '375-BCC.TXT')
+tdata_fcc = os.path.join('..', 'thermo', 'cast_iron', '375-FCC.TXT')
+tdata_bcc = os.path.join('..', 'thermo', 'cast_iron', '375-BCC.TXT')
 
 # Instantiate BCC and FCC classes as mart and aust objects
 # T_C: temperature; dt: Time step; z: positions of the nodes;

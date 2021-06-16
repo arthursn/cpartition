@@ -4,6 +4,7 @@
 ### Custom ###
 *.sublime-workspace
 *.sublime-project
+*.log
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

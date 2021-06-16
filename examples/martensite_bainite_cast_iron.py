@@ -1,9 +1,10 @@
-import numpy as np
-import time
-
 import os
-import sys
-from cpartition import *
+import traceback
+import numpy as np
+from cpartition import (BCC, FCC, Interface, WBs,
+                        ControlIterationSteps, SimulationLog,
+                        merge_domains)
+from scipy.interpolate import interp1d
 
 basename = os.path.basename(__file__).replace('.py', '')
 
@@ -18,8 +19,8 @@ dt = control_itsteps.dt
 each = 20
 control_itsteps.print_summary()
 
-tdata_fcc = os.path.join('thermo', 'FoFo', '375-FCC.TXT')
-tdata_bcc = os.path.join('thermo', 'FoFo', '375-BCC.TXT')
+tdata_fcc = os.path.join('..', 'thermo', 'cast_iron', '375-FCC.TXT')
+tdata_bcc = os.path.join('..', 'thermo', 'cast_iron', '375-BCC.TXT')
 
 mart = BCC(T_C=T_C, dt=dt, z=np.linspace(-1.16, -.66, 50), c0=c0,
            tdata=tdata_bcc)
@@ -127,9 +128,9 @@ for i in control_itsteps.itlist:
 
             j += 1
 
-    except:
+    except Exception:
         print(i+1, j)
-        raise
+        traceback.print_exc()
 
     log.printit(i, criteria=lambda i: (i+1) % each == 0)
 
