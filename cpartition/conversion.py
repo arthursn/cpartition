@@ -1,5 +1,7 @@
 from periodictable import elements
 
+__all__ = ['w2x', 'x2w', 'x2wp']
+
 
 def w2x(wC, w={}, x={}, y=dict(Fe=1.), fullcomp=False):
     """

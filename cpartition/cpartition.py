@@ -14,6 +14,9 @@ from fnmatch import fnmatch
 
 from .tab_datafile import load_table
 
+
+__all__ = ['WBs', 'Domain', 'BCC', 'FCC', 'Interface', 'merge_domains']
+
 # Fundamental constants
 K = 273.15              # 0 degrees Celsius in Kelvin
 R = 8.3144598           # Gas constant in J/(K.mol)
@@ -455,7 +458,7 @@ class BCC(Domain):
             try:
                 # Loads thermodynamical data from tdata file
                 self.chempot = load_table(self.tdata, 'X(C)', ignorephaseregions='*#2')
-            except:
+            except Exception:
                 raise Exception('Cannot load file "{}".'.format(self.tdata))
             else:
                 self.prepare_tdata()

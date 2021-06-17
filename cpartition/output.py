@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 
 from .conversion import x2wp
 
+__all__ = ['SimulationLog', 'CProfiles']
+
 
 class SimulationLog(object):
     """
