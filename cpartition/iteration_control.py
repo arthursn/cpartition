@@ -2,7 +2,35 @@ import sys
 import numpy as np
 from itertools import cycle
 
-__all__ = ['ControlIterationSteps', 'IterationStep']
+__all__ = ['IterationStep', 'ControlIterationSteps']
+
+
+class IterationStep(object):
+    def __init__(self, dt, ti, tf, iti=0):
+        self.dt = dt  # delta t
+        self.ti = ti  # initial time
+        self.tf = tf  # final time
+        self.iti = iti
+
+        self.ntime = int((self.tf - self.ti)/self.dt)
+        self.t = self.ti + (np.arange(self.ntime) + 1)*self.dt
+        self.tf = self.t[-1]
+
+    @property
+    def _itloc(self):
+        return list(range(self.ntime))
+
+    @property
+    def itloc(self):
+        return np.array(self._itloc)
+
+    @property
+    def _itglo(self):
+        return [it + self.iti for it in self._itloc]
+
+    @property
+    def itglo(self):
+        return np.array(self._itglo)
 
 
 class ControlIterationSteps(object):
@@ -89,31 +117,3 @@ class ControlIterationSteps(object):
         for itstep in self.itsteps:
             fstream.write(('dt = {}, ti = {}, tf = {}, iti = {}, itf = {}\n').format(
                 itstep.dt, itstep.ti, itstep.tf, itstep.itglo[0], itstep.itglo[-1]))
-
-
-class IterationStep(object):
-    def __init__(self, dt, ti, tf, iti=0):
-        self.dt = dt  # delta t
-        self.ti = ti  # initial time
-        self.tf = tf  # final time
-        self.iti = iti
-
-        self.ntime = int((self.tf - self.ti)/self.dt)
-        self.t = self.ti + (np.arange(self.ntime) + 1)*self.dt
-        self.tf = self.t[-1]
-
-    @property
-    def _itloc(self):
-        return list(range(self.ntime))
-
-    @property
-    def itloc(self):
-        return np.array(self._itloc)
-
-    @property
-    def _itglo(self):
-        return [it + self.iti for it in self._itloc]
-
-    @property
-    def itglo(self):
-        return np.array(self._itglo)
