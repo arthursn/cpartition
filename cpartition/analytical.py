@@ -11,6 +11,8 @@ def Andrews(C=0., Mn=0., Ni=0., Cr=0., Mo=0.):
     """
     Calculates the Ms temperature using Andrews equation
 
+    [1] K.W. Andrews, Iron Steel Inst. J. 203 (1965) 721–727.
+
     Parameters
     ----------
     C, Mn, Ni, Cr, Mo : float
@@ -27,7 +29,10 @@ def Andrews(C=0., Mn=0., Ni=0., Cr=0., Mo=0.):
 def KM(T, Ms, beta=0.011):
     """
     Koistinen-Margurger equation
-    f_fcc = exp[-beta(Ms - T)]
+
+    f_austenite = 1 - f_martensite = exp[-beta(Ms - T)]
+
+    [1] D.P. Koistinen, R.E. Marburger, Acta Metall. 7 (1959) 59–60.
 
     Parameters
     ----------
@@ -45,9 +50,12 @@ def KM(T, Ms, beta=0.011):
     return np.exp(-beta*(Ms - T))
 
 
-def D_fcc(T_C, C=0):  # Agren, 1986
+def D_fcc(T_C, C=0):
     """
-    Diffusion coefficient of austenite
+    Diffusion coefficient of austenite as calculated by Ågren's empirical
+    formula
+
+    [1] J. Ågren, Scr. Metall. 20 (1986) 1507–1510.
 
     Parameters
     ----------
